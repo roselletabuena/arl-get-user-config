@@ -2,33 +2,49 @@ import { FastifyPluginAsync } from "fastify";
 import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { dynamoConfig } from "../utils";
-import { CompanyDetails } from "../models/userInteface";
-import { unmarshall } from "@aws-sdk/util-dynamodb";
 import { getCorsOrigin } from "../utils";
+import { handleError } from "../utils/errorUtils";
+import { decodeToken } from "../utils/jwtUtils";
+import { DynamoService } from "../services/dynamoService";
 
 const client = new DynamoDBClient(dynamoConfig());
 const dynamodb = DynamoDBDocumentClient.from(client);
 
 const root: FastifyPluginAsync = async (fastify, _): Promise<void> => {
-  fastify.get("/users/config", async function (_, reply) {
+  fastify.get("/users/config", async function (request, reply) {
+    const token = request.headers["authorization"]?.replace("Bearer ", "");
+
+    if (!token) {
+      return handleError(
+        reply,
+        new Error("Authorization token is missing"),
+        400
+      );
+    }
+
     try {
-      // const command = new ScanCommand({
-      //   TableName: process.env.TABLE_NAME,
-      // });
+      const decoded = decodeToken(token);
+      const userId = decoded?.["cognito:username"];
 
-      // const response = await dynamodb.send(command);
+      if (!userId) {
+        return reply
+          .status(400)
+          .send({ error: "username not found in the token" });
+      }
 
-      reply
+      const user = await DynamoService.getItemByUserId(userId);
+
+      return reply
         .status(200)
         .headers({
           "Access-Control-Allow-Origin": getCorsOrigin(),
           "Access-Control-Allow-Methods": "GET, OPTIONS",
           "Access-Control-Allow-Headers": "Content-Type, Authorization",
         })
-        .send({ response: "hello" });
+        .send({ response: user });
     } catch (error) {
-      console.error("Error fetching products:", error);
-      reply.status(500).send({ error: "Failed to fetch products" });
+      console.log("Error fetching products:", error, typeof error);
+      return reply.status(500).send({ error });
     }
   });
 };
