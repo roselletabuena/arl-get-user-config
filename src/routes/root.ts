@@ -32,7 +32,7 @@ const root: FastifyPluginAsync = async (fastify, _): Promise<void> => {
           .send({ error: "username not found in the token" });
       }
 
-      const user = await DynamoService.getItemByUserId(userId);
+      const customerSettings = await DynamoService.getItemByUserId(userId);
 
       return reply
         .status(200)
@@ -41,7 +41,7 @@ const root: FastifyPluginAsync = async (fastify, _): Promise<void> => {
           "Access-Control-Allow-Methods": "GET, OPTIONS",
           "Access-Control-Allow-Headers": "Content-Type, Authorization",
         })
-        .send({ response: user });
+        .send({ response: customerSettings });
     } catch (error) {
       console.log("Error fetching products:", error, typeof error);
       return reply.status(500).send({ error });
