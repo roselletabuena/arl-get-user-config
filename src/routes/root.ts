@@ -41,7 +41,7 @@ const root: FastifyPluginAsync = async (fastify, _): Promise<void> => {
           "Access-Control-Allow-Methods": "GET, OPTIONS",
           "Access-Control-Allow-Headers": "Content-Type, Authorization",
         })
-        .send({ response: customerSettings });
+        .send({ invoice_config: customerSettings });
     } catch (error) {
       console.log("Error fetching products:", error, typeof error);
       return reply.status(500).send({ error });
