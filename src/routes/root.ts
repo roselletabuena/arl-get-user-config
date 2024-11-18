@@ -43,7 +43,7 @@ const root: FastifyPluginAsync = async (fastify, _): Promise<void> => {
         })
         .send({ invoice_config: customerSettings });
     } catch (error) {
-      console.log("Error fetching products:", error, typeof error);
+      console.log("Error fetching user config:", error, typeof error);
       return reply.status(500).send({ error });
     }
   });
